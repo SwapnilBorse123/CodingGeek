@@ -9,8 +9,9 @@
 
 using namespace std;
 
-char* stringtoarr(string s);
+char* convert (string str);
 string tostring(int num);
+char Filename[1];
 
 
 struct MNT{
@@ -53,7 +54,7 @@ int main()
 		}
 	}
 
-	alstr = stringtoarr(all);
+	alstr = convert(all);
 	//cout<<alstr;
 
 	//Scanning for parameters//
@@ -271,7 +272,7 @@ int main()
 	
 	//Printing all the tables //
 	
-	cout<<endl<<endl<<"PNTAB"<<endl;
+	/*cout<<endl<<endl<<"PNTAB"<<endl;
 	for(int k=0;k<3;k++){
 		cout<<PNTAB[k]<<endl;
 	}
@@ -283,7 +284,7 @@ int main()
 	for(int k=0;k<1;k++){
 		cout<<SSNTAB[k]<<endl;
 	}
-	
+	*/
 	// taking the input
 	
 	struct APTAB{
@@ -307,6 +308,7 @@ int main()
 			else input = input + cha;
 		}
 	}
+	
 	i = 0;
 	while(input[i]!='\0'){
 		if(input[i] != ' ' && input[i] != '\n')
@@ -317,7 +319,7 @@ int main()
 				aptab[0].str = "AREA";
 				aptab[1].num = 5;
 				aptab[2].str = "AREG";
-				EVTAB[0] = 0;
+				EVTAB[0] = 1;
 				/*while(input[i]!='\n'){
 					if(input[i]>='A' && input[i]<='Z' || input[i]>='0' && input[i]<='9'){
 						actualpar = actualpar + input[i];
@@ -331,10 +333,12 @@ int main()
 				}
 				actualpar = "";*/
 			}
+			param = "";
 		}
 		i++;	
 	}
 	
+
 	// Reading the intermediate code//
 	FILE* icode;string intcode="";
 	icode = fopen("intermcode.txt","r");
@@ -344,23 +348,108 @@ int main()
 	else{
 		while(1){
 			char c = fgetc(icode);
-			if(c == NULL)break;
+			if(c == EOF)break;
 			intcode = intcode + c;		
 		}
 	}
-	cout<<intcode<<" ";
+	
+	// Reading the intermediate code and priting the final expanded macro in the file called output.. //
+	ofstream outputfile;
+		outputfile.open("macoutput.txt");
+	i = 0;string iword = "";param = "";int k = 0;int inc = EVTAB[0];
+
+	int counter = aptab[1].num-1;
+	
+	string modstmt[2];
+	modstmt[0] = "MOVER";
+	modstmt[1] = "MOVEM";
+	while(input[i]!='\0'){
+		if(input[i]!=' ' && input[i]!='\n')
+			param = param + input[i];
+		else{
+			if(param == mnt[0].name){
+				param = "";
+				while(input[i]!='\n')
+					i++;
+				//Now reading the intermediate code
+				
+				while(intcode[k]!='\0'){
+					if(intcode[k]!=' '){
+						iword = iword + intcode[k];
+					}else{
+						/*if(iword == "SET"){
+							EVTAB[0] = EVTAB[0]+1;
+						}*/
+						if(iword == "MOVER"){
+							outputfile<<"+ MOVER "<<aptab[2].str<<" 0\n";
+						}
+						A:
+						if(iword == "MOVEM"){
+							outputfile<<"+ MOVEM "<<aptab[2].str<<" "<<aptab[0].str<<" + "<<EVTAB[0]-1<<"\n";
+						}
+						if(iword == "AIF"){
+							while(counter--){
+								outputfile<<"+ MOVEM "<<aptab[2].str<<" "<<aptab[0].str<<" + "<<inc++<<"\n";
+							}
+						}
+						iword = "";
+					}
+					k++;	
+				}
+			}
+			else{
+				outputfile<<param<<input[i];
+				param = "";
+			}
+		}
+		i++;	
+	}
+	outputfile<<param;
 	return 0;
 }
 
 //Function to convert strings to character arrays //
 
-char* stringtoarr(string s){
-	int l = s.length();
-	char* arr = (char*)malloc(sizeof(char)*l+1);
-	int i = 0;
-	while(i<l){
-		arr[i] = s[i];
-		i++;
-	}
-	return arr;
+char* convert (string str){
+	string s = str;
+	int TempNumOne=s.size();
+	for (int a=0;a<=TempNumOne;a++)
+        {
+            Filename[a]=s[a];
+        }	
+    return(Filename);
 }
+
+
+
+
+/*
+// Input macro to the program //
+
+adfas dafsaas
+CLEARMEM AREA 5
+adfas fadfas
+
+// Input assembly code //
+	MACRO
+	CLEARMEM	&X, &N, &REG=AREG
+	LCL	&M
+&M	SET	0
+	MOVER	&REG, ='0'
+.MORE	MOVEM	&REG, &X+&M
+&M	SET	&M+1
+	AIF	(&M NE N) .MORE
+	MEND
+
+// Output after the macro expansion // 
+
+adfas dafsaas
++ MOVER AREG 0
++ MOVEM AREG AREA + 0
++ MOVEM AREG AREA + 1
++ MOVEM AREG AREA + 2
++ MOVEM AREG AREA + 3
++ MOVEM AREG AREA + 4
+adfas fadfas
+
+*/
