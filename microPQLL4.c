@@ -1,4 +1,4 @@
-// 13/06/14 19:34 // // Third consequtive error //
+// 13/06/14 19:34 // //For numbers less than 32 as of now //
 
 // Program to remove the duplicate elements from the linked list //
 
